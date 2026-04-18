@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sherifian Post | Actualités Statiques</title>
+    <link rel="stylesheet" href="assets/style.css"> </head>
+<body>
+
+    <header>
+        <h1>The Sherifian Post</h1>
+        <nav>
+            <button onclick="filter('Global Reach')">Global Reach</button>
+            <button onclick="filter('The Shield')">The Shield</button>
+            <button onclick="filter('Archives')">Archives</button>
+            <button onclick="filter('Cultural DNA')">Cultural DNA</button>
+        </nav>
+    </header>
+
+    <main id="articles-list">
+        <p>Chargement des actualités...</p>
+    </main>
+
+    <script>
+        // Remplace par ton pseudo GitHub et le nom de ton repo
+        const username = 'ENZOSULLIVAN'; 
+        const repo = 'the-sherifian-post';
+
+        async function loadArticles() {
+            const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/articles`);
+            const files = await response.json();
+            const container = document.getElementById('articles-list');
+            container.innerHTML = ''; // On vide le message de chargement
+
+            files.forEach(file => {
+                if(file.name.endsWith('.md')) {
+                    // On crée un lien pour chaque fichier trouvé
+                    const articleCard = document.createElement('div');
+                    articleCard.className = 'article-card';
+                    
+                    // On nettoie le nom du fichier pour le titre (ex: 2023-article.md -> 2023-article)
+                    const displayName = file.name.replace('.md', '').replaceAll('-', ' ');
+                    
+                    articleCard.innerHTML = `
+                        <h2>${displayName}</h2>
+                        <a href="article.html?id=${file.name}">Lire la suite</a>
+                    `;
+                    container.appendChild(articleCard);
+                }
+            });
+        }
+
+        loadArticles();
+    </script>
+</body>
+</html>
