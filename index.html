@@ -3,90 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Sherifian Post | Actualités Statiques</title>
-    <link rel="stylesheet" href="assets/style.css"> </head>
+    <title>The Sherifian Post | Official Records</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <style>
+        /* Styles spécifiques pour l'injection dynamique */
+        .article-card { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dotted #ccc; }
+        .article-card h3 { margin-bottom: 5px; text-transform: uppercase; font-size: 1.4rem; }
+        .radar-item { font-size: 0.9rem; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .radar-item strong { color: #d32f2f; }
+        .preuve-content img { max-width: 100%; height: auto; margin-top: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
 <body>
 
     <header>
-        <h1>The Sherifian Post</h1>
-        <nav>
-            <button onclick="filter('Global Reach')">Global Reach</button>
-            <button onclick="filter('The Shield')">The Shield</button>
-            <button onclick="filter('Archives')">Archives</button>
-            <button onclick="filter('Cultural DNA')">Cultural DNA</button>
-        </nav>
+        <h1>THE SHERIFIAN POST</h1>
+        <p>OFFICIAL RECORDS OF THE IMPERIAL CONTINUITY — ESTABLISHED 2026</p>
     </header>
 
+    <nav>
+        <button onclick="location.href='index.html'">Accueil</button>
+        <button>Global Reach</button>
+        <button>The Shield</button>
+        <button>Archives</button>
+        <button>Cultural DNA</button>
+    </nav>
+
     <main class="main-grid">
-    <section>
-        <h2 style="border-bottom: 2px solid var(--dark-green)">Dernières Dépêches</h2>
-        <div id="articles-list">
-            <p>Chargement des actualités...</p>
-        </div>
-    </section>
+        <section>
+            <div id="preuve-du-jour" class="preuve-zone" style="display:none;">
+                <span style="background:var(--dark-green); color:var(--gold); padding:2px 8px; font-size:0.8rem; font-weight:bold;">PREUVE DU JOUR</span>
+                <div id="preuve-container" class="preuve-content">
+                    </div>
+            </div>
 
-    <aside class="sidebar">
-        <div class="radar-box">
-            <h3>Radar de Debunking</h3>
-            <p><small><strong>[RUMEUR]</strong> Les prétendues frontières coloniales...</small></p>
-            <p><small><strong>[PSYOPS]</strong> Déconstruction de l'article fallacieux...</small></p>
-        </div>
+            <h2 style="border-bottom: 2px solid var(--dark-green); margin-top: 30px;">Dernières Dépêches Impériales</h2>
+            
+            <div id="articles-list">
+                <p>Chargement des dépêches...</p>
+            </div>
+        </section>
 
-        <div class="edito-box">
-            <h3>Édito de Vision</h3>
-            <p><em>"The Sherifian Post est un rempart. Nous documentons la réalité d'un Empire souverain..."</em></p>
-        </div>
-    </aside>
- </main>
+        <aside class="sidebar">
+            <div class="radar-box">
+                <h3>Radar de Debunking</h3>
+                <div id="radar-container">
+                    <p><small>Analyse des menaces informationnelles...</small></p>
+                </div>
+            </div>
+
+            <div class="edito-box">
+                <h3>Édito de Vision</h3>
+                <p><em>"The Sherifian Post est un rempart. Nous documentons la réalité d'un Empire souverain, dont la continuité historique ne saurait être altérée par les agitations périphériques."</em></p>
+            </div>
+        </aside>
+    </main>
 
     <script>
-        // Remplace par ton pseudo GitHub et le nom de ton repo
-        const username = 'enzosullivan'; 
-const repo = 'The-sherifian-post';
+        const username = 'enzosullivan';
+        const repo = 'The-sherifian-post';
 
-// Fonction générique pour récupérer des fichiers
-async function fetchFolder(path) {
-    const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`);
-    return await response.json();
-}
-
-async function initSite() {
-    // 1. Charger les Articles
-    const articles = await fetchFolder('content/articles');
-    const articlesContainer = document.getElementById('articles-list');
-    articlesContainer.innerHTML = '';
-    articles.forEach(file => {
-        if(file.name.endsWith('.md')) {
-            const div = document.createElement('div');
-            div.className = 'article-card';
-            const title = file.name.replace('.md', '').replaceAll('-', ' ');
-            div.innerHTML = `<h3>${title}</h3><a href="article.html?id=${file.name}">Lire la suite</a>`;
-            articlesContainer.appendChild(div);
+        // Fonction pour nettoyer les noms de fichiers en titres lisibles
+        function cleanTitle(filename) {
+            return filename.replace('.md', '').replaceAll('-', ' ').toUpperCase();
         }
-    });
 
-    // 2. Charger le Radar de Debunking
-    const radarFiles = await fetchFolder('content/radar');
-    const radarContainer = document.querySelector('.radar-box');
-    radarContainer.innerHTML = '<h3>Radar de Debunking</h3>'; // Garde le titre
-    radarFiles.slice(0, 3).forEach(async file => { // On prend les 3 derniers
-        const res = await fetch(file.download_url);
-        const content = await res.text();
-        const p = document.createElement('p');
-        p.innerHTML = `<small><strong>[ALERTE]</strong> ${content.substring(0, 100)}...</small>`;
-        radarContainer.appendChild(p);
-    });
+        async function initSite() {
+            try {
+                // 1. CHARGEMENT DES ARTICLES (Dossier content/articles)
+                const resArticles = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/articles`);
+                const articles = await resArticles.json();
+                const articlesContainer = document.getElementById('articles-list');
+                articlesContainer.innerHTML = '';
 
-    // 3. Charger la Preuve du jour (le plus récent)
-    const proofFiles = await fetchFolder('content/highlights');
-    if(proofFiles.length > 0) {
-        const lastProof = proofFiles[proofFiles.length - 1];
-        // Ici tu peux ajouter une logique pour afficher l'image et le titre
-        document.querySelector('.preuve-zone').innerHTML = `<h3>Preuve du jour : ${lastProof.name.replace('.md', '')}</h3>`;
-    }
-}
+                if (Array.isArray(articles)) {
+                    articles.reverse().forEach(file => { // reverse pour avoir le plus récent en haut
+                        if(file.name.endsWith('.md')) {
+                            const div = document.createElement('div');
+                            div.className = 'article-card';
+                            div.innerHTML = `
+                                <h3>${cleanTitle(file.name)}</h3>
+                                <p>Analyse exclusive de la rédaction.</p>
+                                <a href="article.html?id=${file.name}">LIRE L'ANALYSE COMPLÈTE</a>
+                            `;
+                            articlesContainer.appendChild(div);
+                        }
+                    });
+                }
 
-initSite();
+                // 2. CHARGEMENT DU RADAR (Dossier content/radar)
+                const resRadar = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/radar`);
+                const radarFiles = await resRadar.json();
+                const radarContainer = document.getElementById('radar-container');
+                radarContainer.innerHTML = '';
+
+                if (Array.isArray(radarFiles)) {
+                    // On prend les 3 derniers messages du radar
+                    const topRadar = radarFiles.slice(-3).reverse();
+                    for (const file of topRadar) {
+                        const fileData = await fetch(file.download_url);
+                        const text = await fileData.text();
+                        // On ignore le frontmatter simple si présent et on prend le texte
+                        const cleanText = text.split('---').pop().trim();
+                        
+                        const div = document.createElement('div');
+                        div.className = 'radar-item';
+                        div.innerHTML = `<strong>[ALERTE]</strong> ${cleanText.substring(0, 120)}...`;
+                        radarContainer.appendChild(div);
+                    }
+                }
+
+                // 3. CHARGEMENT DE LA PREUVE DU JOUR (Dossier content/highlights)
+                const resProof = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/highlights`);
+                const proofFiles = await resProof.json();
+                
+                if (Array.isArray(proofFiles) && proofFiles.length > 0) {
+                    const lastProofFile = proofFiles[proofFiles.length - 1];
+                    const proofData = await fetch(lastProofFile.download_url);
+                    const proofText = await proofData.text();
+                    
+                    // Extraction simple du titre (entre guillemets ou première ligne)
+                    const proofTitle = cleanTitle(lastProofFile.name);
+                    const proofBody = proofText.split('---').pop().trim();
+
+                    document.getElementById('preuve-du-jour').style.display = 'block';
+                    document.getElementById('preuve-container').innerHTML = `
+                        <h2 style="margin:10px 0;">${proofTitle}</h2>
+                        <p>${proofBody.substring(0, 200)}...</p>
+                        <button onclick="location.href='article.html?id=${lastProofFile.name}'" style="background:black; color:white; border:none; padding:5px 10px; cursor:pointer;">ANALYSER LE MANUSCRIT</button>
+                    `;
+                }
+
+            } catch (error) {
+                console.error("Erreur de chargement :", error);
+            }
+        }
+
+        initSite();
     </script>
 </body>
 </html>
