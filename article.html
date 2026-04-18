@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chargement...</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <header>
+        <a href="index.html">← Retour à l'accueil</a>
+    </header>
+
+    <article id="content">
+        <h1 id="post-title">Chargement du titre...</h1>
+        <div id="post-body"></div>
+    </article>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('id');
+        const username = 'enzosullivan'; 
+        const repo = 'The-sherifian-post';
+
+        async function loadArticle() {
+            if (!articleId) return;
+
+            // Récupération du fichier via l'API GitHub
+            const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/articles/${articleId}`);
+            const data = await response.json();
+            
+            // Décoder le contenu Base64 envoyé par GitHub
+            const markdown = atob(data.content);
+            
+            // Séparer le Frontmatter (les métadonnées entre ---) du contenu
+            const parts = markdown.split('---');
+            const content = parts.length > 2 ? parts[2] : parts[0];
+            
+            // Injection du titre et du contenu
+            document.getElementById('post-body').innerHTML = marked.parse(content);
+            document.title = articleId.replace('.md', '').replaceAll('-', ' ');
+            document.getElementById('post-title').innerText = document.title;
+        }
+
+        loadArticle();
+    </script>
+</body>
+</html>
