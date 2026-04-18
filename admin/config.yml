@@ -2,8 +2,8 @@ backend:
   name: github
   repo: enzosullivan/The-sherifian-post
   branch: main
-  site_domain: enzosullivan.github.io/The-sherifian-post
-  base_url: https://api.netlify.com # Utilise le proxy de Netlify pour la connexion
+  # REMPLACE l'URL ci-dessous par ton URL Netlify réelle (SANS le / à la fin)
+  base_url: https://fascinating-cajeta-89305f.netlify.app/
   auth_endpoint: auth
 
 media_folder: "assets/images"
