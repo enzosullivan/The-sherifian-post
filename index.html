@@ -6,12 +6,23 @@
     <title>The Sherifian Post | Official Records</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
-        /* Styles spécifiques pour l'injection dynamique */
-        .article-card { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dotted #ccc; }
-        .article-card h3 { margin-bottom: 5px; text-transform: uppercase; font-size: 1.4rem; }
-        .radar-item { font-size: 0.9rem; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .radar-item strong { color: #d32f2f; }
-        .preuve-content img { max-width: 100%; height: auto; margin-top: 10px; border: 1px solid #ccc; }
+        .article-card { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; }
+        .article-card img { width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border: 1px solid #ddd; }
+        .article-card h3 { margin: 0 0 10px 0; font-size: 1.8rem; color: var(--text-black); }
+        .article-card p { margin-bottom: 15px; color: #555; }
+        
+        .preuve-zone { background: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 30px; }
+        .preuve-content { display: flex; gap: 20px; align-items: start; }
+        .preuve-content img { width: 150px; height: 150px; object-fit: cover; border: 1px solid #ccc; }
+        .preuve-text { flex: 1; }
+        
+        .radar-item { font-size: 0.9rem; margin-bottom: 15px; border-left: 3px solid #d32f2f; padding-left: 10px; }
+        
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .preuve-content { flex-direction: column; }
+            .preuve-content img { width: 100%; height: auto; }
+        }
     </style>
 </head>
 <body>
@@ -32,29 +43,24 @@
     <main class="main-grid">
         <section>
             <div id="preuve-du-jour" class="preuve-zone" style="display:none;">
-                <span style="background:var(--dark-green); color:var(--gold); padding:2px 8px; font-size:0.8rem; font-weight:bold;">PREUVE DU JOUR</span>
-                <div id="preuve-container" class="preuve-content">
-                    </div>
+                <span style="background:#00332c; color:#c5a059; padding:3px 10px; font-size:0.7rem; font-weight:bold;">PREUVE DU JOUR</span>
+                <div id="preuve-container" class="preuve-content"></div>
             </div>
 
-            <h2 style="border-bottom: 2px solid var(--dark-green); margin-top: 30px;">Dernières Dépêches Impériales</h2>
-            
+            <h2 style="border-bottom: 2px solid #00332c; margin-bottom: 20px;">Dernières Dépêches Impériales</h2>
             <div id="articles-list">
-                <p>Chargement des dépêches...</p>
+                <p>Chargement des archives en cours...</p>
             </div>
         </section>
 
         <aside class="sidebar">
             <div class="radar-box">
                 <h3>Radar de Debunking</h3>
-                <div id="radar-container">
-                    <p><small>Analyse des menaces informationnelles...</small></p>
-                </div>
+                <div id="radar-container"></div>
             </div>
-
             <div class="edito-box">
                 <h3>Édito de Vision</h3>
-                <p><em>"The Sherifian Post est un rempart. Nous documentons la réalité d'un Empire souverain, dont la continuité historique ne saurait être altérée par les agitations périphériques."</em></p>
+                <p><em>"The Sherifian Post est un rempart. Nous documentons la réalité d'un Empire souverain."</em></p>
             </div>
         </aside>
     </main>
@@ -63,82 +69,74 @@
         const username = 'enzosullivan';
         const repo = 'The-sherifian-post';
 
-        // Fonction pour nettoyer les noms de fichiers en titres lisibles
-        function cleanTitle(filename) {
-            return filename.replace('.md', '').replaceAll('-', ' ').toUpperCase();
+        // Fonction pour extraire proprement les infos du Markdown
+        function parseFrontmatter(text) {
+            const obj = {};
+            const match = text.match(/---\s*([\s\S]*?)\s*---/);
+            if (match) {
+                const lines = match[1].split('\n');
+                lines.forEach(line => {
+                    const [key, ...val] = line.split(':');
+                    if (key && val) obj[key.trim()] = val.join(':').trim().replace(/^"(.*)"$/, '$1');
+                });
+            }
+            return obj;
         }
 
         async function initSite() {
             try {
-                // 1. CHARGEMENT DES ARTICLES (Dossier content/articles)
+                // 1. ARTICLES
                 const resArticles = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/articles`);
                 const articles = await resArticles.json();
-                const articlesContainer = document.getElementById('articles-list');
-                articlesContainer.innerHTML = '';
+                const container = document.getElementById('articles-list');
+                container.innerHTML = '';
 
-                if (Array.isArray(articles)) {
-                    articles.reverse().forEach(file => { // reverse pour avoir le plus récent en haut
-                        if(file.name.endsWith('.md')) {
-                            const div = document.createElement('div');
-                            div.className = 'article-card';
-                            div.innerHTML = `
-                                <h3>${cleanTitle(file.name)}</h3>
-                                <p>Analyse exclusive de la rédaction.</p>
-                                <a href="article.html?id=${file.name}">LIRE L'ANALYSE COMPLÈTE</a>
-                            `;
-                            articlesContainer.appendChild(div);
-                        }
-                    });
+                for (const file of articles.reverse()) {
+                    if(!file.name.endsWith('.md')) continue;
+                    const raw = await (await fetch(file.download_url)).text();
+                    const data = parseFrontmatter(raw);
+                    const div = document.createElement('div');
+                    div.className = 'article-card';
+                    div.innerHTML = `
+                        ${data.featured_image ? `<img src="${data.featured_image}" alt="Cover">` : ''}
+                        <h3>${data.title || file.name}</h3>
+                        <p>${data.seo_description || 'Analyse en cours...'}</p>
+                        <a href="article.html?id=${file.name}">LIRE LA SUITE</a>
+                    `;
+                    container.appendChild(div);
                 }
 
-                // 2. CHARGEMENT DU RADAR (Dossier content/radar)
+                // 2. RADAR
                 const resRadar = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/radar`);
                 const radarFiles = await resRadar.json();
                 const radarContainer = document.getElementById('radar-container');
-                radarContainer.innerHTML = '';
-
-                if (Array.isArray(radarFiles)) {
-                    // On prend les 3 derniers messages du radar
-                    const topRadar = radarFiles.slice(-3).reverse();
-                    for (const file of topRadar) {
-                        const fileData = await fetch(file.download_url);
-                        const text = await fileData.text();
-                        // On ignore le frontmatter simple si présent et on prend le texte
-                        const cleanText = text.split('---').pop().trim();
-                        
-                        const div = document.createElement('div');
-                        div.className = 'radar-item';
-                        div.innerHTML = `<strong>[ALERTE]</strong> ${cleanText.substring(0, 120)}...`;
-                        radarContainer.appendChild(div);
-                    }
+                for (const file of radarFiles.slice(-3).reverse()) {
+                    const text = await (await fetch(file.download_url)).text();
+                    const cleanText = text.split('---').pop().trim();
+                    const div = document.createElement('div');
+                    div.className = 'radar-item';
+                    div.innerHTML = `<strong>[ALERTE]</strong> ${cleanText.substring(0, 100)}...`;
+                    radarContainer.appendChild(div);
                 }
 
-                // 3. CHARGEMENT DE LA PREUVE DU JOUR (Dossier content/highlights)
+                // 3. PREUVE DU JOUR
                 const resProof = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/highlights`);
                 const proofFiles = await resProof.json();
-                
-                if (Array.isArray(proofFiles) && proofFiles.length > 0) {
-                    const lastProofFile = proofFiles[proofFiles.length - 1];
-                    const proofData = await fetch(lastProofFile.download_url);
-                    const proofText = await proofData.text();
-                    
-                    // Extraction simple du titre (entre guillemets ou première ligne)
-                    const proofTitle = cleanTitle(lastProofFile.name);
-                    const proofBody = proofText.split('---').pop().trim();
-
+                if (proofFiles.length > 0) {
+                    const file = proofFiles[proofFiles.length - 1];
+                    const raw = await (await fetch(file.download_url)).text();
+                    const data = parseFrontmatter(raw);
                     document.getElementById('preuve-du-jour').style.display = 'block';
                     document.getElementById('preuve-container').innerHTML = `
-                        <h2 style="margin:10px 0;">${proofTitle}</h2>
-                        <p>${proofBody.substring(0, 200)}...</p>
-                        <button onclick="location.href='article.html?id=${lastProofFile.name}'" style="background:black; color:white; border:none; padding:5px 10px; cursor:pointer;">ANALYSER LE MANUSCRIT</button>
+                        ${data.featured_image ? `<img src="${data.featured_image}">` : ''}
+                        <div class="preuve-text">
+                            <h3>${data.title || 'Document Impérial'}</h3>
+                            <button onclick="location.href='article.html?id=${file.name}'" style="background:black; color:white; border:none; padding:8px 12px; cursor:pointer; font-size:0.7rem; margin-top:10px;">ANALYSER LE MANUSCRIT</button>
+                        </div>
                     `;
                 }
-
-            } catch (error) {
-                console.error("Erreur de chargement :", error);
-            }
+            } catch (e) { console.error(e); }
         }
-
         initSite();
     </script>
 </body>
