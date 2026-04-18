@@ -33,3 +33,21 @@ collections:
         }
       - { label: "Corps de l'article", name: "body", widget: "markdown" }
       
+    # ... garde la collection articles et ajoute celles-ci dessous :
+  - name: "radar"
+    label: "Radar de Debunking"
+    folder: "content/radar"
+    create: true
+    fields:
+      - { label: "Titre de l'alerte", name: "title", widget: "string" }
+      - { label: "Contenu court", name: "body", widget: "text" }
+
+  - name: "highlights"
+    label: "Preuve du Jour"
+    folder: "content/highlights"
+    create: true
+    fields:
+      - { label: "Titre de la preuve", name: "title", widget: "string" }
+      - { label: "Image du document", name: "featured_image", widget: "image" }
+      - { label: "Analyse rapide", name: "body", widget: "markdown" }
+      
