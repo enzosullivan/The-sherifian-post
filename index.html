@@ -41,34 +41,52 @@
 
     <script>
         // Remplace par ton pseudo GitHub et le nom de ton repo
-        const username = 'ENZOSULLIVAN'; 
-        const repo = 'the-sherifian-post';
+        const username = 'enzosullivan'; 
+const repo = 'The-sherifian-post';
 
-        async function loadArticles() {
-            const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/content/articles`);
-            const files = await response.json();
-            const container = document.getElementById('articles-list');
-            container.innerHTML = ''; // On vide le message de chargement
+// Fonction générique pour récupérer des fichiers
+async function fetchFolder(path) {
+    const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`);
+    return await response.json();
+}
 
-            files.forEach(file => {
-                if(file.name.endsWith('.md')) {
-                    // On crée un lien pour chaque fichier trouvé
-                    const articleCard = document.createElement('div');
-                    articleCard.className = 'article-card';
-                    
-                    // On nettoie le nom du fichier pour le titre (ex: 2023-article.md -> 2023-article)
-                    const displayName = file.name.replace('.md', '').replaceAll('-', ' ');
-                    
-                    articleCard.innerHTML = `
-                        <h2>${displayName}</h2>
-                        <a href="article.html?id=${file.name}">Lire la suite</a>
-                    `;
-                    container.appendChild(articleCard);
-                }
-            });
+async function initSite() {
+    // 1. Charger les Articles
+    const articles = await fetchFolder('content/articles');
+    const articlesContainer = document.getElementById('articles-list');
+    articlesContainer.innerHTML = '';
+    articles.forEach(file => {
+        if(file.name.endsWith('.md')) {
+            const div = document.createElement('div');
+            div.className = 'article-card';
+            const title = file.name.replace('.md', '').replaceAll('-', ' ');
+            div.innerHTML = `<h3>${title}</h3><a href="article.html?id=${file.name}">Lire la suite</a>`;
+            articlesContainer.appendChild(div);
         }
+    });
 
-        loadArticles();
+    // 2. Charger le Radar de Debunking
+    const radarFiles = await fetchFolder('content/radar');
+    const radarContainer = document.querySelector('.radar-box');
+    radarContainer.innerHTML = '<h3>Radar de Debunking</h3>'; // Garde le titre
+    radarFiles.slice(0, 3).forEach(async file => { // On prend les 3 derniers
+        const res = await fetch(file.download_url);
+        const content = await res.text();
+        const p = document.createElement('p');
+        p.innerHTML = `<small><strong>[ALERTE]</strong> ${content.substring(0, 100)}...</small>`;
+        radarContainer.appendChild(p);
+    });
+
+    // 3. Charger la Preuve du jour (le plus récent)
+    const proofFiles = await fetchFolder('content/highlights');
+    if(proofFiles.length > 0) {
+        const lastProof = proofFiles[proofFiles.length - 1];
+        // Ici tu peux ajouter une logique pour afficher l'image et le titre
+        document.querySelector('.preuve-zone').innerHTML = `<h3>Preuve du jour : ${lastProof.name.replace('.md', '')}</h3>`;
+    }
+}
+
+initSite();
     </script>
 </body>
 </html>
